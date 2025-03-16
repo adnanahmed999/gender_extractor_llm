@@ -1,0 +1,5 @@
+streamlit
+urllib3
+pandas
+google-genai
+google-api-python-client
