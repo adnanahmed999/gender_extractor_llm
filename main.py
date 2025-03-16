@@ -7,7 +7,7 @@ import streamlit as st
 from google import genai
 from googleapiclient.discovery import build
 
-st.title("Gender extractor")
+st.title("💭♂️♀️Gender Extractor")
 
 YOUTUBE_API_KEY = st.secrets['YOUTUBE_API_KEY']
 GEMINI_API_KEY = st.secrets['GEMINI_API_KEY']
