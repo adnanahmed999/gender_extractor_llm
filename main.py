@@ -36,7 +36,6 @@ def get_csv_name(video_id):
             pre_correction_csv_name = f'''{video_channel} - {video_title} - {video_id}.csv'''
             csv_name = get_corrected_csv_name(pre_correction_csv_name)
 
-            st.write('File name: ', csv_name)
         except Exception as e:
             st.write(f"An error occurred: {e}")
             exit()
@@ -93,9 +92,7 @@ def get_first_n_distinct_authors(comments_df, n):
 
 def process_in_chunks(unknown_gender_users, chunk_size=500):
   num_chunks = math.ceil(len(unknown_gender_users) / chunk_size)
-  st.write('--> Number of chunks: ', num_chunks)
   for i in range(num_chunks):
-    st.write('-->Processing chunk: ', i)
     start_index = i * chunk_size
     end_index = min((i + 1) * chunk_size, len(unknown_gender_users))
     yield unknown_gender_users[start_index:end_index]
@@ -132,12 +129,13 @@ def get_gender_df(authors):
 
         df_gender = pd.DataFrame(columns=['username', 'gender'])
 
-        for i in range(5):
+        ITERATION_COUNT = 5
+
+        for i in range(ITERATION_COUNT):
             if len(unknown_gender_users) == 0:
                 break
 
-            st.write(f"Iteration {i + 1}")
-            st.write(f"->Length of unknown_gender_users: {len(unknown_gender_users)}")
+            st.write(f"🔄Iteration {i + 1}/{ITERATION_COUNT}. 👥Users: {len(unknown_gender_users)}")
             unknown_gender_users_new = []
 
             for unknown_gender_users_chunk in process_in_chunks(unknown_gender_users):
