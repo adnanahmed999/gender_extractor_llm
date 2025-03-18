@@ -43,7 +43,49 @@ def get_csv_name(video_id):
     st.write('✅Video details')
     return csv_name
 
-def get_youtube_comments(video_id):
+# def get_youtube_comments(video_id):
+#     with st.spinner(text='Getting video comments', show_time=True):
+#         comments_data = []
+#         next_page_token = None
+#
+#         while True:
+#             request = youtube.commentThreads().list(
+#                 part="snippet,replies",
+#                 videoId=video_id,
+#                 maxResults=100,  # Max limit per request
+#                 textFormat="plainText",
+#                 pageToken=next_page_token
+#             )
+#             response = request.execute()
+#
+#             for item in response.get("items", []):
+#                 # Extract top-level comment
+#                 top_comment = item["snippet"]["topLevelComment"]["snippet"]
+#                 top_comment_author = top_comment["authorDisplayName"]
+#                 top_comment_text = top_comment["textDisplay"]
+#                 top_comment_published = top_comment["publishedAt"]
+#
+#                 comments_data.append([top_comment_author, top_comment_text, top_comment_published, "Top-Level Comment"])
+#
+#                 # Extract replies if available
+#                 if "replies" in item:
+#                     for reply in item["replies"]["comments"]:
+#                         reply_author = reply["snippet"]["authorDisplayName"]
+#                         reply_text = reply["snippet"]["textDisplay"]
+#                         reply_published = reply["snippet"]["publishedAt"]
+#
+#                         comments_data.append([reply_author, reply_text, reply_published, "Reply"])
+#
+#             next_page_token = response.get("nextPageToken")
+#             if not next_page_token:
+#                 break  # No more pages left
+#
+#     st.write('✅Video comments')
+#     return pd.DataFrame(comments_data, columns=["Author", "Comment", "Published At", "Type"])
+
+def get_authors(video_id, limit=5000):
+    AUTHOR_LIMIT = 5000
+    authors_set = set()
     with st.spinner(text='Getting video comments', show_time=True):
         comments_data = []
         next_page_token = None
@@ -59,36 +101,39 @@ def get_youtube_comments(video_id):
             response = request.execute()
 
             for item in response.get("items", []):
-                # Extract top-level comment
+
                 top_comment = item["snippet"]["topLevelComment"]["snippet"]
                 top_comment_author = top_comment["authorDisplayName"]
-                top_comment_text = top_comment["textDisplay"]
-                top_comment_published = top_comment["publishedAt"]
+                authors_set.add(top_comment_author)
 
-                comments_data.append([top_comment_author, top_comment_text, top_comment_published, "Top-Level Comment"])
+                if len(authors_set) >= AUTHOR_LIMIT:
+                    st.write('✅Commentators')
+                    return list(authors_set)
 
                 # Extract replies if available
                 if "replies" in item:
                     for reply in item["replies"]["comments"]:
                         reply_author = reply["snippet"]["authorDisplayName"]
-                        reply_text = reply["snippet"]["textDisplay"]
-                        reply_published = reply["snippet"]["publishedAt"]
+                        authors_set.add(reply_author)
 
-                        comments_data.append([reply_author, reply_text, reply_published, "Reply"])
+                        if len(authors_set) >= AUTHOR_LIMIT:
+                            st.write('✅Commentators')
+                            return list(authors_set)
 
             next_page_token = response.get("nextPageToken")
             if not next_page_token:
                 break  # No more pages left
 
-    st.write('✅Video comments')
-    return pd.DataFrame(comments_data, columns=["Author", "Comment", "Published At", "Type"])
+    st.write('✅Commentators')
+    return list(authors_set)
 
-def get_first_n_distinct_authors(comments_df, n):
-    authors = comments_df['Author'].dropna().unique()
-    cleaned_authors = [author[1:] if author.startswith('@') else author for author in authors]
-    if len(cleaned_authors) >= 15000:
-        cleaned_authors = cleaned_authors[:15000]
-    return cleaned_authors
+
+# def get_first_n_distinct_authors(comments_df, n):
+#     authors = comments_df['Author'].dropna().unique()
+#     cleaned_authors = [author[1:] if author.startswith('@') else author for author in authors]
+#     if len(cleaned_authors) >= 15000:
+#         cleaned_authors = cleaned_authors[:15000]
+#     return cleaned_authors
 
 def process_in_chunks(unknown_gender_users, chunk_size=500):
   num_chunks = math.ceil(len(unknown_gender_users) / chunk_size)
@@ -187,8 +232,9 @@ def download_csv(df, csv_name):
 def run(video_link):
     video_id = get_video_id(video_link)
     csv_name = get_csv_name(video_id)
-    comments_df = get_youtube_comments(video_id)
-    authors = get_first_n_distinct_authors(comments_df, 15000)
+    # comments_df = get_youtube_comments(video_id)
+    # authors = get_first_n_distinct_authors(comments_df, 15000)
+    authors = get_authors(video_id, 5000)
     df = get_gender_df(authors)
     download_csv(df, csv_name)
 
